@@ -2,8 +2,12 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from backend.agent.agent_runner import run_agent
 from fastapi.middleware.cors import CORSMiddleware
+from backend.mcp.server import router as mcp_router
 
 app = FastAPI()
+
+app.include_router(mcp_router)
+
 
 app.add_middleware(
     CORSMiddleware,

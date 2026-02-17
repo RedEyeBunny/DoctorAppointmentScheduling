@@ -11,6 +11,13 @@ def check_availability(doctor_name: str, date: str):
     db = SessionLocal()
     doctor = db.query(Doctor).filter_by(name=doctor_name).first()
 
+    if doctor is None:
+        return {
+            "status": "error",
+            "message": f"Doctor {doctor_name} not found"
+        }
+
+
     start = parser.parse(date)
     end = start + timedelta(hours=8)
 
@@ -28,18 +35,30 @@ def check_availability(doctor_name: str, date: str):
 
 
 def parse_datetime(date_str: str, time_str: str):
-    # Convert 10 AM → 10:00
-    time_obj = datetime.strptime(time_str, "%I %p")
-    hour = time_obj.hour
+    formats = [
+        "%Y-%m-%d",
+        "%d/%m/%Y",
+        "%d-%m-%Y",
+        "%d/%m/%y"
+    ]
 
-    full_datetime = datetime.strptime(date_str, "%Y-%m-%d")
-    full_datetime = full_datetime.replace(hour=hour)
+    for fmt in formats:
+        try:
+            return datetime.strptime(date_str, fmt)
+        except ValueError:
+            continue
 
-    return full_datetime
+    raise ValueError(f"Unsupported date format: {date_str}")
 
 def book_appointment(doctor_name, patient_name, slot_time, date):
     db = SessionLocal()
     doctor = db.query(Doctor).filter_by(name=doctor_name).first()
+
+    if doctor is None:
+        return {
+            "status": "error",
+            "message": f"Doctor {doctor_name} not found"
+        }
 
     appointment = Appointment(
         doctor_id=doctor.id,
